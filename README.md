@@ -3,7 +3,7 @@ RSTconn
 
 A TCPKill is a utility that implements a **TCP reset attack** for IPv4 and IPv6 written in python and scapy.
 
-RESET is a flag in TCP packets to indicate that the conection is not longer working.
+RESET is a flag in TCP packets to indicate that the connection is not longer working.
 If any of the two participants in a TCP connection send a packet
 contains such a RESET flag, the connection will be closed immediately.
 
@@ -15,13 +15,9 @@ The attack can be used to make certain users to fail to use certain
 network services based on TCP if we know the information above.
 
 In practice, we should eavesdrop the victims’ communications to get
-their IPs, ports and the sequence number. You can do it by:
+their IPs, ports and the sequence number.
 
-Trick them to connect a malicious WiFi, or use other ways to hijack
-their communications.
-
-Sniff WiFi packets if they are near you and using WiFi.
-We can filter the TCP packets and find the newest packets that we want to attack.
+You can do it by filtering the TCP packets and find the newest packets that we want to attack.
 
 We can sends a TCP packet with RESET flag and the IPs and ports of
 source and destination are sniffed from victims. What’s more, the
@@ -30,7 +26,6 @@ be equal or lager than the ack value from the lastest packet the sender
 received and in the window of receiver. So we should update it.
 To ensure successful, we can send lots of packets with different
 sequence number which is larger than the sniffed ack field.
-
 
 Setup
 -----
