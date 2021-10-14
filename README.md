@@ -90,6 +90,19 @@ If you want to test rstconn in IPv6, use instead:
 - `nc -nvl ::1 8000`
 - `rstconn -i lo -ip "::1" -p 8000 -pc 33`
 
+Usage examples
+--------------
+
+Reset connections to ftp.gnu.org
+````
+rstconn -i enp0s25 --server-ip ftp.gnu.org -pc 33
+````
+
+on the client side we'll see
+````
+ftp> ls
+421 Service not available, remote server has closed connection
+````
 
 Credits
 -------
