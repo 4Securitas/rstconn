@@ -10,15 +10,60 @@ def log(msg, params={}, **kwargs):
     formatted_params = " ".join([f"{k}={v}" for k, v in params.items()])
     logger.info(f"{msg} {formatted_params}")
 
+
 def is_adapter_localhost(adapter, localhost_ip):
     return len([ip for ip in adapter.ips if ip.ip == localhost_ip]) > 0
 
-def is_packet_on_tcp_conn(server_ip, server_port, client_ip):
+
+def is_packet_tcp_server_to_client(server_ip, client_ip=None, server_port=None):
     def f(p):
-        return (
-            is_packet_tcp_server_to_client(server_ip, server_port, client_ip)(p) or
-            is_packet_tcp_client_to_server(server_ip, server_port, client_ip)(p)
+        if not p.haslayer(TCP):
+            return False
+
+        _ip_type = _get_ip_type(p)
+
+        src_ip = p[_ip_type].src
+        src_port = p[TCP].sport
+        dst_ip = p[_ip_type].dst
+
+        test = src_ip == server_ip
+        if client_ip:
+            test = test and dst_ip == client_ip
+        if server_port:
+            test = test and src_port == server_port
+        return test
+
+    return f
+
+
+def is_packet_tcp_client_to_server(client_ip, server_ip=None, server_port=None):
+    def f(p):
+        if not p.haslayer(TCP):
+            return False
+
+        _ip_type = _get_ip_type(p)
+
+        src_ip = p[_ip_type].src
+        dst_ip = p[_ip_type].dst
+        dst_port = p[_ip_type].dport
+
+        test = src_ip == client_ip
+        if test:
+            test = test and dst_ip == server_ip
+        if server_port:
+            test = test and dst_port == server_port
+        return test
+
+    return f
+
+
+def is_packet_on_tcp_conn(server_ip, client_ip, server_port):
+    def f(p):
+        res = (
+            is_packet_tcp_server_to_client(server_ip, client_ip, server_port)(p) or
+            is_packet_tcp_client_to_server(client_ip, server_ip, server_port)(p)
         )
+        return res
 
     return f
 
@@ -37,38 +82,6 @@ def _get_ip_type(packet):
         _ip_type = IP
         conf.L3socket = L3RawSocket
     return _ip_type
-
-
-def is_packet_tcp_server_to_client(server_ip, server_port, client_ip):
-    def f(p):
-        if not p.haslayer(TCP):
-            return False
-
-        _ip_type = _get_ip_type(p)
-
-        src_ip = p[_ip_type].src
-        src_port = p[TCP].sport
-        dst_ip = p[_ip_type].dst
-
-        return src_ip == server_ip and src_port == server_port and dst_ip == client_ip
-
-    return f
-
-
-def is_packet_tcp_client_to_server(server_ip, server_port, client_ip):
-    def f(p):
-        if not p.haslayer(TCP):
-            return False
-
-        _ip_type = _get_ip_type(p)
-
-        src_ip = p[_ip_type].src
-        dst_ip = p[_ip_type].dst
-        dst_port = p[_ip_type].dport
-
-        return src_ip == client_ip and dst_ip == server_ip and dst_port == server_port
-
-    return f
 
 
 def send_reset(iface, seq_jitter=0, ignore_syn=True, window_size=2052, verbose=0):
@@ -118,32 +131,24 @@ def send_reset(iface, seq_jitter=0, ignore_syn=True, window_size=2052, verbose=0
             },
         )
 
+        ip_data = dict(
+            src=dst_ip,
+            dst=src_ip
+        )
+
+        tcp_data = dict(
+            sport=dst_port,
+            dport=src_port,
+            window=window_size,
+            seq=rst_seq
+        )
+
         # send also a SYN/ACK first ... just to put some doubts in the kernel ...
-        p = _ip_type(
-            src=dst_ip,
-            dst=src_ip
-        ) / TCP(
-                sport=dst_port,
-                dport=src_port,
-                flags="SA",
-                window=window_size,
-                seq=rst_seq
-            )
-        send(p, verbose=verbose, iface=iface)
+        for flag in ('SA', 'R'):
+            tcp_data['flags'] = flag
 
-        p = _ip_type(
-            src=dst_ip,
-            dst=src_ip
-        ) / TCP(
-                sport=dst_port,
-                dport=src_port,
-                flags="R",
-                window=window_size,
-                seq=rst_seq
-            )
-        send(p, verbose=verbose, iface=iface)
-
-
+            p = _ip_type(**ip_data) / TCP(**tcp_data)
+            send(p, verbose=verbose, iface=iface)
 
     return f
 

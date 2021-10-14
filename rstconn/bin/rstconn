@@ -4,10 +4,11 @@ import ifaddr
 
 import logging
 import sys
+import socket
 
 from scapy.all import sniff
 from rstconn import __version__
-from rstconn.rstconn import send_reset, log_packet, is_packet_tcp_client_to_server, is_adapter_localhost
+from rstconn.rstconn import send_reset, log_packet, is_packet_tcp_client_to_server, is_packet_on_tcp_conn, is_adapter_localhost
 
 
 LOCAL_IFACES = [
@@ -30,14 +31,19 @@ parser.add_argument(
     help="Interface where to listen to"
 )
 parser.add_argument(
-    '--ip', '-ip',
-    required=True,
-    help="Server IPv4"
+    '--server-ip', '-sip',
+    required=False,
+    help="IPv4 or hostname"
 )
 parser.add_argument(
-    '--port', '-p',
+    '--client-ip', '-cip',
+    required=False,
+    help="IPv4 or hostname"
+)
+parser.add_argument(
+    '--server-port', '-p',
     type=int,
-    required=True,
+    required=False,
     help="Server port"
 )
 parser.add_argument(
@@ -96,8 +102,10 @@ logging.basicConfig(
 
 if _args.version:
     sys.exit(f'{__version__}')
-
-if _args.monitor:
+elif not _args.server_ip and not _args.client_ip:
+    logger.error("You must define least a client or a server ip.")
+    sys.exit(1)
+elif _args.monitor:
     _func = log_packet
 else:
     _func = send_reset(
@@ -108,16 +116,31 @@ else:
             verbose=True if _args.debug == 'DEBUG' else False
         )
 
+if _args.server_ip:
+    server_ip = socket.gethostbyname(_args.server_ip)
+    logger.info(f"Resolving {_args.server_ip} to {server_ip}")
+else:
+    server_ip = None
+
+if _args.client_ip:
+    client_ip = socket.gethostbyname(_args.client_ip)
+    logger.info(f"Resolving {_args.client_ip} to {client_ip}")
+else:
+    client_ip = None
+
+
 logger.info(f"Starting sniffing for the target {_func}...")
 t = sniff(
         iface=_args.iface,
         count=_args.packet_count,
         prn=_func,
-        lfilter=is_packet_tcp_client_to_server(
-            _args.ip,
-            _args.port,
-            _args.ip
+        lfilter=is_packet_on_tcp_conn(
+            server_ip = server_ip,
+            client_ip = client_ip,
+            server_port = _args.server_port
             )
     )
-logger.info(f"Sent {_args.packet_count} SYN/ACK + RST packets in response of the following packets: \n")
-t.nsummary()
+
+if t.res:
+    logger.info(f"Sent {_args.packet_count} SYN/ACK + RST packets in response of the following packets: \n")
+    t.nsummary()
