@@ -21,15 +21,8 @@ network services based on TCP if we know the information above.
 In practice, we should eavesdrop the victims’ communications to get
 their IPs, ports and the sequence number.
 
-You can do it by filtering the TCP packets and find the newest packets that we want to attack.
+We do it by filtering the TCP packets and find the newest packets that we want to attack.
 
-We can sends a TCP packet with RESET flag and the IPs and ports of
-source and destination are sniffed from victims. What’s more, the
-sequence number will increase in TCP communication, its value should
-be equal or lager than the ack value from the lastest packet the sender
-received and in the window of receiver. So we should update it.
-To ensure successful, we can send lots of packets with different
-sequence number which is larger than the sniffed ack field.
 
 Setup
 -----
