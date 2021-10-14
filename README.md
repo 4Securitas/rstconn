@@ -51,7 +51,7 @@ optional arguments:
   --server-port SERVER_PORT, -p SERVER_PORT
                         Server port
   --packet-count PACKET_COUNT, -pc PACKET_COUNT
-                        listen for a maximum of N packets
+                        sends N RST packets
   --seq-jitter SEQ_JITTER, -sj SEQ_JITTER
                         Set seq_jitter to be non-zero in order to prove to yourself that the
                         sequence number of a RST segment does indeed need to be exactly equal
@@ -100,13 +100,19 @@ Usage examples
 
 Reset connections to ftp.gnu.org
 ````
-rstconn -i enp0s25 --server-ip ftp.gnu.org -pc 33
+rstconn -i enp0s25 --server-ip ftp.gnu.org
 ````
 
 on the client side we'll see
 ````
 ftp> ls
 421 Service not available, remote server has closed connection
+````
+
+without server/client ip, using only the port
+
+````
+rstconn -i lo --server-ip 127.0.0.1 --server-port 8000
 ````
 
 Credits

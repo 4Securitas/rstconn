@@ -51,7 +51,7 @@ parser.add_argument(
     required=False,
     type=int,
     default=50,
-    help="listen for a maximum of N packets"
+    help="sends N RST packets"
 )
 parser.add_argument(
     '--seq-jitter', '-sj',
@@ -102,9 +102,6 @@ logging.basicConfig(
 
 if _args.version:
     sys.exit(f'{__version__}')
-elif not _args.server_ip and not _args.client_ip:
-    logger.error("You must define least a client or a server ip.")
-    sys.exit(1)
 elif _args.monitor:
     _func = log_packet
 else:

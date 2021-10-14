@@ -26,11 +26,19 @@ def is_packet_tcp_server_to_client(server_ip, client_ip=None, server_port=None):
         src_port = p[TCP].sport
         dst_ip = p[_ip_type].dst
 
-        test = src_ip == server_ip
-        if client_ip:
-            test = test and dst_ip == client_ip
-        if server_port:
-            test = test and src_port == server_port
+        attr_dict = {
+            "server_ip" : (server_ip, src_ip),
+            "client_ip" : (client_ip, dst_ip),
+            "server_port" : (server_port, src_port)
+        }
+        test = False
+        for attr, value in attr_dict.items():
+            if not value[0]:
+                continue
+            test = value[0] == value[1]
+            if not test:
+                return False
+        # test = src_ip == ser and src_port == server_port
         return test
 
     return f
@@ -47,11 +55,19 @@ def is_packet_tcp_client_to_server(client_ip, server_ip=None, server_port=None):
         dst_ip = p[_ip_type].dst
         dst_port = p[_ip_type].dport
 
-        test = src_ip == client_ip
-        if test:
-            test = test and dst_ip == server_ip
-        if server_port:
-            test = test and dst_port == server_port
+        attr_dict = {
+            "server_ip" : (server_ip, dst_ip),
+            "client_ip" : (client_ip, src_ip),
+            "server_port" : (server_port, dst_port)
+        }
+        test = False
+        for attr, value in attr_dict.items():
+            if not value[0]:
+                continue
+            test = value[0] == value[1]
+            if not test:
+                return False
+
         return test
 
     return f
