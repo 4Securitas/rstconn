@@ -116,7 +116,7 @@ ftp> ls
 without server/client ip, using only the port
 
 ````
-rstconn -i lo --server-ip 127.0.0.1 --server-port 8000
+rstconn -i lo --server-port 8000
 ````
 
 Credits
