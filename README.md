@@ -44,8 +44,12 @@ optional arguments:
   -h, --help            show this help message and exit
   --iface {lo,enp0s25,lxcbr0,docker0,br-d316e57def52,vethd4f41f0,veth6fa5336, ...}, -i {...}
                         Interface where to listen to
-  --ip IP, -ip IP       Server IPv4
-  --port PORT, -p PORT  Server port
+  --server-ip SERVER_IP, -sip SERVER_IP
+                        IPv4 or hostname
+  --client-ip CLIENT_IP, -cip CLIENT_IP
+                        IPv4 or hostname
+  --server-port SERVER_PORT, -p SERVER_PORT
+                        Server port
   --packet-count PACKET_COUNT, -pc PACKET_COUNT
                         listen for a maximum of N packets
   --seq-jitter SEQ_JITTER, -sj SEQ_JITTER
@@ -59,16 +63,17 @@ optional arguments:
                         Debug level, see python logging; defaults to INFO if omitted
   -m, --monitor         Just sniff traffic without sendin RST
   -v, --version         Print version and exit
+
 ````
 
 RSTconn listens for the matching connections and than sends a
 number of SYN/ACK and RST packets to the client to get the connection be killed.
 
 The number of packets is configurable by `--packet-count`, `--iface` and
-`-ip` and `--port` are related to the local server port to be listen on.
+`--server-ip` and `--server-port` are related to the local server port to be listen on.
 
 ````
-rstconn -i lo -ip 127.0.0.1 -p 8000 --packet-count 50
+rstconn -i lo --server-ip 127.0.0.1 --server-port 8000 --packet-count 50
 ````
 
 Demo
@@ -88,7 +93,7 @@ If you want to test rstconn in IPv6, use instead:
 
 - `nc ::1 8000`
 - `nc -nvl ::1 8000`
-- `rstconn -i lo -ip "::1" -p 8000 -pc 33`
+- `rstconn -i lo --server-ip "::1" --server-port 8000 -pc 33`
 
 Usage examples
 --------------
