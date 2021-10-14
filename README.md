@@ -1,7 +1,11 @@
 RSTconn
 -------
 
-A TCPKill is a utility that implements a **TCP reset attack** for IPv4 and IPv6 written in python and scapy.
+A TCPKill is a utility that implements a **TCP reset attack**.
+RSTconn works for both IPv4 and IPv6 and is written in python and scapy.
+
+How RSTconn works
+-------------
 
 RESET is a flag in TCP packets to indicate that the connection is not longer working.
 If any of the two participants in a TCP connection send a packet
