@@ -100,10 +100,11 @@ def _get_ip_type(packet):
     return _ip_type
 
 
-def send_reset(iface, seq_jitter=0, ignore_syn=True, window_size=2052, verbose=0):
+def send_reset(
+    iface, seq_jitter=0, ignore_syn=True, window_size=2052, verbose=0
+):
 
     def f(p):
-
         _ip_type = _get_ip_type(p)
 
         src_ip = p[_ip_type].src
@@ -136,7 +137,6 @@ def send_reset(iface, seq_jitter=0, ignore_syn=True, window_size=2052, verbose=0
             _jit_msg = "jitter == 0, this RST packet should close the connection"
 
         rst_seq = ack + jitter
-
 
         log(
             f"Sending RST packet... {_jit_msg}",

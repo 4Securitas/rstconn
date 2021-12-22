@@ -8,7 +8,13 @@ import socket
 
 from scapy.all import sniff
 from rstconn import __version__
-from rstconn.rstconn import send_reset, log_packet, is_packet_tcp_client_to_server, is_packet_on_tcp_conn, is_adapter_localhost
+from rstconn.rstconn import (
+    send_reset,
+    log_packet,
+    is_packet_tcp_client_to_server,
+    is_packet_on_tcp_conn,
+    is_adapter_localhost
+)
 
 
 LOCAL_IFACES = [
@@ -86,7 +92,13 @@ parser.add_argument(
     '-m', '--monitor', required=False,
     action="store_true",
     default=False,
-    help="Just sniff traffic without sendin RST"
+    help="Just sniff traffic, for the gievn filter, without sendin RST"
+)
+parser.add_argument(
+    '-ma', '--monitor-all', required=False,
+    action="store_true",
+    default=False,
+    help="Just sniff traffic without any filter"
 )
 parser.add_argument(
     '-v', '--version', required=False,
@@ -102,7 +114,7 @@ logging.basicConfig(
 
 if _args.version:
     sys.exit(f'{__version__}')
-elif _args.monitor:
+elif _args.monitor or _args.monitor_all:
     _func = log_packet
 else:
     _func = send_reset(
@@ -126,18 +138,27 @@ else:
     client_ip = None
 
 
+_lfilter = is_packet_on_tcp_conn(
+    server_ip = server_ip,
+    client_ip = client_ip,
+    server_port = _args.server_port
+)
+
+sniff_data = dict(
+    iface=_args.iface,
+    count=_args.packet_count,
+    prn=_func
+)
+
+if not _args.monitor_all:
+    sniff_data['lfilter'] = _lfilter
+
+
 logger.info(f"Starting sniffing for the target {_func}...")
-t = sniff(
-        iface=_args.iface,
-        count=_args.packet_count,
-        prn=_func,
-        lfilter=is_packet_on_tcp_conn(
-            server_ip = server_ip,
-            client_ip = client_ip,
-            server_port = _args.server_port
-            )
-    )
+t = sniff(**sniff_data)
 
 if t.res:
-    logger.info(f"Sent {_args.packet_count} SYN/ACK + RST packets in response of the following packets: \n")
+    logger.info(
+        f"Sent {_args.packet_count} SYN/ACK + RST packets in response of the following packets: \n"
+    )
     t.nsummary()
