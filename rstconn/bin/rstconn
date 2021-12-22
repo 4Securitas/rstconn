@@ -150,7 +150,7 @@ sniff_data = dict(
     prn=_func
 )
 
-if not _args.monitor_all:
+if server_ip or client_ip or _args.server_port:
     sniff_data['lfilter'] = _lfilter
 
 
